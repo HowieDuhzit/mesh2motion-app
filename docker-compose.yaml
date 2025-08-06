@@ -1,0 +1,53 @@
+version: '3.8'  
+  
+services:  
+  mesh2motion-app:  
+    build: .  
+    container_name: mesh2motion-app  
+    ports:  
+      - "4173:4173"  
+    volumes:  
+      - ./data:/app/data  # Use specific data directory instead of bind mounting entire repo  
+    environment:  
+      - NODE_ENV=production  
+    restart: unless-stopped  
+    networks:  
+      - default  
+    labels:  
+      - "coolify.managed=true"  
+      - "coolify.type=application"  
+    healthcheck:  
+      test: ["CMD", "curl", "-f", "http://localhost:4173/"]  
+      interval: 30s  
+      timeout: 10s  
+      retries: 3  
+      start_period: 40s  
+  
+  mesh2motion-dev:  
+    build: .  
+    container_name: mesh2motion-dev  
+    ports:  
+      - "5173:5173"  
+    volumes:  
+      - ./data:/app/data  
+    environment:  
+      - NODE_ENV=development  
+    command: npm run dev  
+    restart: unless-stopped  
+    networks:  
+      - default  
+    labels:  
+      - "coolify.managed=true"  
+      - "coolify.type=application"  
+    profiles:  
+      - dev  
+    healthcheck:  
+      test: ["CMD", "curl", "-f", "http://localhost:5173/"]  
+      interval: 30s  
+      timeout: 10s  
+      retries: 3  
+      start_period: 40s  
+  
+networks:  
+  default:  
+    external: false
