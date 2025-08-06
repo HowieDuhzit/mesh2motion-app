@@ -1,14 +1,13 @@
-# Use Node.js LTS as base image  
-FROM node:18-alpine  
+# Multi-stage build for production  
+FROM node:18-alpine AS builder  
   
-# Set working directory  
 WORKDIR /app  
   
 # Copy package files  
 COPY package*.json ./  
   
 # Install dependencies  
-RUN npm install  
+RUN npm ci --only=production  
   
 # Copy source code  
 COPY . .  
@@ -16,9 +15,16 @@ COPY . .
 # Build the application  
 RUN npm run build  
   
-# Expose port 4173 (Vite preview default)  
-EXPOSE 4173  
-EXPOSE 5173  
+# Production stage with nginx  
+FROM nginx:alpine  
   
-# Start the application in preview mode  
-CMD ["npm", "run", "build"]
+# Copy built assets  
+COPY --from=builder /app/dist /usr/share/nginx/html  
+  
+# Copy nginx configuration  
+COPY nginx.conf /etc/nginx/conf.d/default.conf  
+  
+# Expose port 80 (Coolify default)  
+EXPOSE 80  
+  
+CMD ["nginx", "-g", "daemon off;"]
